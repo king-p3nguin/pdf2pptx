@@ -1,19 +1,19 @@
 #!/bin/bash
 # Alireza Shafaei - shafaei@cs.ubc.ca - Jan 2016
 
-resolution=1024
+# resolution=1024
 density=300
 #colorspace="-depth 8"
-colorspace="-colorspace sRGB -background white -alpha remove"
+# colorspace="-colorspace sRGB -background white -alpha remove"
 makeWide=true
 
 if [ $# -eq 0 ]; then
-    echo "No arguments supplied!"
-    echo "Usage: ./pdf2pptx.sh file.pdf"
-    echo "			Generates file.pdf.pptx in widescreen format (by default)"
-    echo "       ./pdf2pptx.sh file.pdf notwide"
-    echo "			Generates file.pdf.pptx in 4:3 format"
-    exit 1
+	echo "No arguments supplied!"
+	echo "Usage: ./pdf2pptx.sh file.pdf"
+	echo "			Generates file.pdf.pptx in widescreen format (by default)"
+	echo "       ./pdf2pptx.sh file.pdf notwide"
+	echo "			Generates file.pdf.pptx in 4:3 format"
+	exit 1
 fi
 
 if [ $# -eq 2 ]; then
@@ -36,19 +36,24 @@ set -o pipefail
 n_pages=$(identify "$1" | wc -l)
 returncode=$?
 if [ $returncode -ne 0 ]; then
-   echo "Unable to count number of PDF pages, exiting"
-   exit $returncode
+	echo "Unable to count number of PDF pages, exiting"
+	exit $returncode
 fi
 if [ $n_pages -eq 0 ]; then
-   echo "Empty PDF (0 pages), exiting"
-   exit 1
+	echo "Empty PDF (0 pages), exiting"
+	exit 1
 fi
 
-for ((i=0; i<n_pages; i++))
-do
-    convert -density $density $colorspace -resize "x${resolution}" "$1[$i]" "$tempname"/slide-$i.png
-    returncode=$?
-    if [ $returncode -ne 0 ]; then break; fi
+# for ((i = 0; i < n_pages; i++)); do
+# 	magick -density $density $colorspace -resize "x${resolution}" "$1[$i]" "$tempname"/slide-$i.png
+# 	returncode=$?
+# 	if [ $returncode -ne 0 ]; then break; fi
+# done
+
+for ((i = 0; i < n_pages; i++)); do
+	pdftoppm -png -singlefile -f $((i + 1)) -r $density "$1" "$tempname"/slide-$i
+	returncode=$?
+	if [ $returncode -ne 0 ]; then break; fi
 done
 
 if [ $returncode -eq 0 ]; then
@@ -58,13 +63,13 @@ else
 	exit $returncode
 fi
 
-if (which perl > /dev/null); then
+if (which perl >/dev/null); then
 	# https://stackoverflow.com/questions/1055671/how-can-i-get-the-behavior-of-gnus-readlink-f-on-a-mac#comment47931362_1115074
 	mypath=$(perl -MCwd=abs_path -le '$file=shift; print abs_path -l $file? readlink($file): $file;' "$0")
-elif (which python > /dev/null); then
+elif (which python >/dev/null); then
 	# https://stackoverflow.com/questions/1055671/how-can-i-get-the-behavior-of-gnus-readlink-f-on-a-mac#comment42284854_1115074
 	mypath=$(python -c 'import os,sys; print(os.path.realpath(os.path.expanduser(sys.argv[1])))' "$0")
-elif (which ruby > /dev/null); then
+elif (which ruby >/dev/null); then
 	mypath=$(ruby -e 'puts File.realpath(ARGV[0])' "$0")
 else
 	mypath="$0"
@@ -91,7 +96,7 @@ function call_sed {
 function add_slide {
 	pat='slide1\.xml\"\/>'
 	id=$1
-	id=$((id+8))
+	id=$((id + 8))
 	entry='<Relationship Id=\"rId'$id'\" Type=\"http:\/\/schemas\.openxmlformats\.org\/officeDocument\/2006\/relationships\/slide\" Target=\"slides\/slide-'$1'\.xml"\/>'
 	rep="${pat}${entry}"
 	call_sed "s/${pat}/${rep}/g" ../_rels/presentation.xml.rels
@@ -102,7 +107,7 @@ function add_slide {
 	call_sed "s/${pat}/${rep}/g" ../../\[Content_Types\].xml
 
 	sid=$1
-	sid=$((sid+256))
+	sid=$((sid + 256))
 	pat='<p:sldIdLst>'
 	entry='<p:sldId id=\"'$sid'\" r:id=\"rId'$id'\"\/>'
 	rep="${pat}${entry}"
@@ -111,14 +116,13 @@ function add_slide {
 
 function make_slide {
 	cp ../slides/slide1.xml ../slides/slide-$1.xml
-	cat ../slides/_rels/slide1.xml.rels | sed "s/image1\.JPG/slide-${slide}.png/g" > ../slides/_rels/slide-$1.xml.rels
+	cat ../slides/_rels/slide1.xml.rels | sed "s/image1\.JPG/slide-${slide}.png/g" >../slides/_rels/slide-$1.xml.rels
 	add_slide $1
 }
 
 pushd "$pptname"/ppt/media/
-count=`ls -ltr | wc -l`
-for (( slide=$count-2; slide>=0; slide-- ))
-do
+count=$(ls -ltr | wc -l)
+for ((slide = $count - 2; slide >= 0; slide--)); do
 	echo "Processing "$slide
 	make_slide $slide
 done
