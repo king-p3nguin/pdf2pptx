@@ -1,4 +1,5 @@
 # pdf2pptx
+
 Convert your (Beamer) PDF slides to (Powerpoint) PPTX
 
 So you don't like using Powerpoint and would rather use Latex/Beamer to make your slides,
@@ -9,23 +10,34 @@ This script gets a PDF file as input and generates a Powerpoint PPTX file while 
 Simply explained, I convert all the slides to high-quality image files first, and then push them into a Powerpoint project as a slide.
 
 # How to run
+
 * Execute `./pdf2pptx.sh test.pdf` to generate a `test.pdf.pptx` file  (replace `test.pdf` with your filename).
 * By default the output powerpoint project is in the widescreen mode. If your slides are not for widescreen you can alternatively run `./pdf2pptx.sh test.pdf notwide` to generate a 4:3 standard PPTX project.
 
 # Dependencies
-* You need `convert` from [ImageMagick](http://www.imagemagick.org/script/binary-releases.php)
+
+* You need `pdftoppm`
 * `zip` and `sed`
 * (Optional) `perl`, `python`, or `ruby` if you use a symlink to pdf2pptx.sh
 
-If you're using *Linux* you *probably* already have all the above.
+If you're using *Linux*, use the following command to install `pdftoppm`
 
-If you're using *OSX* you need to install **ImageMagick** and make sure `convert` is accessible from your Terminal.
+```bash
+sudo apt-get install poppler-utils
+```
+
+If you're using *OSX*, use the following command to install `pdftoppm`
+
+```bash
+brew install poppler
+```
 
 If you're using *Windows* you can use *Cygwin*, but if you don't have it already, it is not recommended!
 If you're using *Windows 10*, you can easily set up Ubuntu bash ([More Info](https://www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/)), install ImageMagick and then use the script natively.
 Another solution for *Windows* users is to access a linux box (such as your university servers) to take care of the task.
 
 # New issues with ImageMagick
+
 ImageMagick no longer allows PDF to image conversion. If you get the following error on the test example:
 
 ```
@@ -49,6 +61,6 @@ to
 
 Now it should work. Note that modifying the policy file would require `root` privileges. If you do not have root access on your machine, you can alternatively compile and use an older version of ImageMagick.
 
-
 # Acknowledgement
+
 Thanks to [Melissa O'Neill](https://www.cs.hmc.edu/~oneill/freesoftware/pdftokeynote.html) for providing a Pdf2Keynote tool for mac which has motivated this small project!
